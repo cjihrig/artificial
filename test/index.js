@@ -1,10 +1,11 @@
 'use strict';
+const Assert = require('assert');
+const Barrier = require('cb-barrier');
 const Express = require('express');
-const Lab = require('lab');
+const Lab = require('@hapi/lab');
 const Artificial = require('../lib');
 
 const lab = exports.lab = Lab.script();
-const expect = Lab.expect;
 const describe = lab.describe;
 const it = lab.it;
 
@@ -21,57 +22,66 @@ function getServer () {
 
 
 describe('Artificial', () => {
-  it('makes a fake request and receives a fake response', (done) => {
+  it('makes a fake request and receives a fake response', () => {
+    const barrier = new Barrier();
     const app = getServer();
 
-    expect(app.inject).to.not.exist();
+    Assert.strictEqual(app.inject, undefined);
 
     const expectedPayload = JSON.stringify({ success: 'success!' });
     const result = Artificial(app);
 
-    expect(result).to.shallow.equal(app);
-    expect(app.inject).to.be.a.function();
+    Assert.strictEqual(result, app);
+    Assert(typeof app.inject === 'function');
 
     app.inject({ method: 'GET', url: '/' }, (res) => {
-      expect(res.statusCode).to.equal(200);
-      expect(res.payload).to.equal(expectedPayload);
-      expect(res.rawPayload).to.equal(Buffer.from(expectedPayload));
-      done();
+      Assert.strictEqual(res.statusCode, 200);
+      Assert.deepStrictEqual(res.payload, expectedPayload);
+      Assert.deepStrictEqual(res.rawPayload, Buffer.from(expectedPayload));
+      barrier.pass();
     });
+
+    return barrier;
   });
 
-  it('passes a string as options', (done) => {
+  it('passes a string as options', () => {
+    const barrier = new Barrier();
     const app = getServer();
     const expectedPayload = JSON.stringify({ success: 'success!' });
 
     Artificial(app);
 
     app.inject('/', (res) => {
-      expect(res.statusCode).to.equal(200);
-      expect(res.payload).to.equal(expectedPayload);
-      expect(res.rawPayload).to.equal(Buffer.from(expectedPayload));
-      done();
+      Assert.strictEqual(res.statusCode, 200);
+      Assert.deepStrictEqual(res.payload, expectedPayload);
+      Assert.deepStrictEqual(res.rawPayload, Buffer.from(expectedPayload));
+      barrier.pass();
     });
+
+    return barrier;
   });
 
-  it('attaches a custom named function', (done) => {
+  it('attaches a custom named function', () => {
+    const barrier = new Barrier();
     const app = getServer();
 
-    expect(app.foobar).to.not.exist();
-    expect(app.inject).to.not.exist();
+    Assert.strictEqual(app.foobar, undefined);
+    Assert.strictEqual(app.inject, undefined);
 
     const expectedPayload = JSON.stringify({ success: 'success!' });
     const result = Artificial(app, 'foobar');
 
-    expect(result).to.shallow.equal(app);
-    expect(app.foobar).to.be.a.function();
-    expect(app.inject).to.not.exist();
+    Assert.strictEqual(result, app);
+    Assert(typeof app.foobar === 'function');
+    Assert.strictEqual(app.inject, undefined);
 
     app.foobar({ method: 'GET', url: '/' }, (res) => {
-      expect(res.statusCode).to.equal(200);
-      expect(res.payload).to.equal(expectedPayload);
-      expect(res.rawPayload).to.equal(Buffer.from(expectedPayload));
-      done();
+      Assert.strictEqual(res.statusCode, 200);
+      Assert.deepStrictEqual(res.payload, expectedPayload);
+      Assert.deepStrictEqual(res.rawPayload, Buffer.from(expectedPayload));
+      barrier.pass();
     });
+
+    return barrier;
   });
 });
