@@ -1,6 +1,6 @@
 {
   "name": "artificial",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Inject fake HTTP request/response into an Express server",
   "author": "Colin J. Ihrig <cjihrig@gmail.com> (http://www.cjihrig.com/)",
   "main": "lib/index.js",
